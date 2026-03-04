@@ -1,0 +1,548 @@
+<!DOCTYPE html><html lang="zh"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>作品集 — 黄海超 UE5 Artist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="Asset/1_高福里.webp">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=Space+Grotesk:wght@300;400;500&display=swap&font-display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollToPlugin.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--rose:#C4A882;--sage:#8B9E8A;--warm:#B5AFA6;--blue:#8FA3B1;--terra:#C4956A;--cream:#E8E0D5;--dark:#141414;--glass:rgba(232,224,213,.05);--gb:rgba(196,168,130,.18)}
+html{cursor:none;scroll-behavior:auto}
+body{background:var(--dark);color:var(--cream);font-family:"Space Grotesk",sans-serif;font-weight:300;overflow-x:hidden}
+#loader{position:fixed;inset:0;z-index:9998;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem}
+#loader-title{font-family:"Playfair Display",serif;font-size:clamp(3rem,8vw,5rem);color:var(--rose);letter-spacing:.25em}
+#loader-num{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1rem;color:var(--warm);letter-spacing:.4em}
+#loader-bar-wrap{width:240px;height:1px;background:rgba(196,168,130,.15)}
+#loader-bar{height:1px;width:0%;background:var(--rose)}
+#cursor-ring{position:fixed;width:32px;height:32px;border:1px solid var(--rose);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,border-color .2s}
+#cursor-dot{position:fixed;width:4px;height:4px;background:var(--rose);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%)}
+body.cur-hover #cursor-ring{width:56px;height:56px;mix-blend-mode:difference;border-color:#fff}
+#grain{display:none}
+#grain::after{content:"";position:absolute;inset:-200%;width:400%;height:400%;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");animation:grain .4s steps(1) infinite}
+@keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-2%,-3%)}20%{transform:translate(3%,2%)}30%{transform:translate(-1%,4%)}40%{transform:translate(4%,-1%)}50%{transform:translate(-3%,3%)}60%{transform:translate(2%,-4%)}70%{transform:translate(-4%,1%)}80%{transform:translate(1%,3%)}90%{transform:translate(3%,-2%)}}
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.5rem 3rem;display:flex;justify-content:space-between;align-items:center}
+nav::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(20,20,20,.88),transparent);pointer-events:none;z-index:-1}
+.nav-logo{font-family:"Cormorant Garamond",serif;font-size:1.1rem;letter-spacing:.35em;color:var(--rose);text-decoration:none;opacity:.6;transition:opacity .3s;font-weight:300}.nav-logo:hover{opacity:.9}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{color:var(--warm);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;transition:color .3s}
+.nav-links a:hover{color:var(--rose)}
+section{position:relative;z-index:2}
+#hero{height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 3rem;overflow:visible;position:relative}
+.hero-slides{position:absolute;inset:0;z-index:0}
+.hero-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.6s ease,transform 8s ease;transform:scale(1.06)}
+.hero-slide.active{opacity:1;transform:scale(1)}
+.hero-slides::after{content:"";position:absolute;inset:-6%;background:linear-gradient(135deg,rgba(20,20,20,.72) 0%,rgba(20,20,20,.35) 60%,rgba(20,20,20,.55) 100%);z-index:1}
+.hero-dots{display:flex;gap:.6rem;z-index:3;margin-top:.8rem}
+.hero-dot{width:20px;height:1px;background:rgba(196,168,130,.3);cursor:pointer;transition:all .3s}
+.hero-dot.active{width:36px;background:var(--rose)}
+#hero>*:not(.hero-slides){position:relative;z-index:2}
+.hero-eyebrow{font-size:.68rem;letter-spacing:.5em;text-transform:uppercase;color:var(--rose);margin-bottom:1.5rem;opacity:0}
+.hero-name{font-family:"Playfair Display",serif;font-size:clamp(6rem,14vw,14vw);font-weight:700;line-height:.88;letter-spacing:-.02em;color:transparent;-webkit-text-stroke:1px var(--rose);opacity:0}
+.hero-portfolio{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1.2rem,3vw,3vw);color:var(--warm);margin-top:1rem;letter-spacing:.15em;opacity:0}
+.hero-identity{font-size:1.2rem;color:var(--warm);margin-top:.8rem;letter-spacing:.08em;opacity:0}
+.hero-sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:clamp(1rem,2vw,1.5rem);color:var(--warm);margin-top:.6rem;letter-spacing:.1em;opacity:0}
+.scroll-indicator{position:absolute;bottom:-10.3rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;opacity:0;z-index:3}
+.scroll-indicator span{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--warm);opacity:.5}
+.scroll-line{width:1px;height:56px;background:linear-gradient(to bottom,var(--rose),transparent);animation:spulse 2s ease-in-out infinite}
+@keyframes spulse{0%,100%{opacity:.3}50%{opacity:1}}
+#about{min-height:100vh;padding:calc(8rem + 150px) 3rem;width:100%}
+.about-inner{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start;max-width:1200px;margin:0 auto}
+.about-left{display:flex;flex-direction:column;align-items:center;text-align:center}
+.about-right{display:flex;flex-direction:column;align-items:center;text-align:center}
+.section-label{font-size:.56rem;letter-spacing:.45em;text-transform:uppercase;color:var(--rose);margin-bottom:1rem;opacity:0}
+.about-title{font-family:"Playfair Display",serif;font-size:clamp(1.8rem,3.5vw,2.8rem);line-height:1.1;margin-bottom:2rem;opacity:0}
+.about-title em{font-style:italic;color:var(--rose)}
+.about-text{font-size:.78rem;line-height:1.9;color:var(--warm);margin-bottom:1.2rem;opacity:0}
+.profile-card{margin-top:2rem;display:flex;gap:1.4rem;align-items:flex-start;opacity:0;justify-content:center}
+.profile-photo{width:90px;height:120px;object-fit:cover;object-position:top;flex-shrink:0;mix-blend-mode:multiply;filter:contrast(1.1) brightness(0.75)}
+.profile-info{display:flex;flex-direction:column;gap:.5rem;text-align:left}
+.info-row{display:flex;gap:1rem;font-size:.7rem}
+.info-label{color:var(--rose);min-width:52px}
+.info-val{color:var(--warm)}
+.logo-row{margin-top:1.6rem;display:flex;gap:1.6rem;align-items:flex-end;flex-wrap:wrap;opacity:0}
+.logo-item{display:flex;flex-direction:column;align-items:center;gap:.4rem}
+.logo-item img{height:36px;width:auto;max-width:80px;object-fit:contain;filter:brightness(.75) sepia(.2);transition:filter .3s}
+.logo-item:hover img{filter:brightness(1.1) sepia(0)}
+.logo-item span{font-size:.58rem;letter-spacing:.08em;color:var(--warm);opacity:.65}
+.skills-title{font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;color:var(--rose);margin-bottom:1.2rem}
+.skills-grid{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:3rem;justify-content:center}
+.skill-tag{padding:.3rem .85rem;border:1px solid var(--gb);border-radius:2px;font-size:.72rem;color:var(--warm);background:var(--glass);backdrop-filter:blur(8px);transition:all .3s;opacity:0;transform:translateY(8px)}
+.skill-tag:hover{border-color:var(--rose);color:var(--rose)}
+.timeline{display:flex;flex-direction:column;max-width:640px;margin:0 auto}
+.tl-item{display:grid;grid-template-columns:130px 1fr;gap:1.5rem;padding:1.2rem 0;border-bottom:1px solid rgba(181,175,166,.1);opacity:0;transform:translateX(16px)}
+.tl-date{font-size:.68rem;color:var(--rose);padding-top:2px}
+.tl-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.3rem}
+.tl-logo{height:20px;width:auto;max-width:60px;object-fit:contain;filter:brightness(.8) sepia(.15);opacity:.75}
+.tl-content h4{font-size:.85rem;color:var(--cream)}
+.tl-content p{font-size:.73rem;color:var(--warm);line-height:1.6}
+#projects{padding:8rem 3rem;background:rgba(0,0,0,.25)}
+.projects-inner{max-width:1400px;margin:0 auto}
+.section-header{text-align:center;margin-bottom:4rem}
+.section-header .section-label{display:block;opacity:1}
+.section-header h2{font-family:"Playfair Display",serif;font-size:clamp(2rem,4vw,3.5rem);font-weight:400;color:var(--cream);opacity:0}
+.section-header .en-sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:1rem;color:var(--warm);opacity:.6;margin-top:.4rem;display:block}
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
+.project-card{position:relative;border:1px solid var(--gb);background:var(--glass);backdrop-filter:blur(12px);border-radius:4px;overflow:hidden;cursor:pointer;transform-style:preserve-3d;transition:box-shadow .3s;opacity:0;transform:translateY(24px)}
+.project-card:hover{box-shadow:0 20px 60px rgba(196,168,130,.14)}
+.card-img{height:200px;overflow:hidden;position:relative}.card-img::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.18);pointer-events:none;z-index:1}
+.card-img img{width:100%;height:200px;object-fit:cover;display:block;transition:transform .6s ease}
+.project-card:hover .card-img img{transform:scale(1.05)}
+.card-img-inner{width:100%;height:100%;transition:transform .6s ease;background-size:cover;background-position:center}
+.project-card:hover .card-img-inner{transform:scale(1.05)}
+.card-body{padding:1.4rem}
+.card-cat{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--rose);margin-bottom:.5rem}
+.card-title{font-family:"Playfair Display",serif;font-size:1.05rem;color:var(--cream);margin-bottom:.5rem;line-height:1.3}
+.card-sub{font-size:.73rem;color:var(--warm);line-height:1.65}
+.card-arrow{position:absolute;bottom:1.4rem;right:1.4rem;width:30px;height:30px;border:1px solid var(--gb);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--rose);transition:all .3s}
+.project-card:hover .card-arrow{background:var(--rose);color:var(--dark);border-color:var(--rose)}
+.grad-1{background:linear-gradient(135deg,#2a2420,#3d3028,#2e2820,#1e1c18)}
+.grad-2{background:linear-gradient(135deg,#1e2428,#2a3038,#1e2830,#161c20)}
+.grad-3{background:linear-gradient(135deg,#1e2418,#283028,#202820,#181e18)}
+.grad-4{background:linear-gradient(135deg,#0e1420,#18202e,#121a28,#0a1018)}
+.grad-5{background:linear-gradient(135deg,#2a1e14,#3d2e1e,#2e2418,#1e1810)}
+.grad-6{background:linear-gradient(135deg,#201820,#302430,#282030,#181420)}
+#realestate{padding:8rem 0;background:linear-gradient(180deg,#1a1a1a,#1e1c1a,#1a1a1a)}
+.re-inner{max-width:1400px;margin:0 auto;padding:0 3rem}
+.re-featured{display:grid;grid-template-columns:1.2fr 1fr;gap:4rem;align-items:center;margin-bottom:4rem}
+.re-grid-left{display:grid;grid-template-columns:repeat(2,1fr);gap:.8rem}
+.re-grid-left .re-card-img{height:150px}
+.re-img-wrap{border-radius:4px;overflow:hidden;opacity:0}
+.re-img{height:460px;position:relative;background-size:cover;background-position:center}
+.re-img::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(196,149,106,.12),rgba(143,163,177,.08)),rgba(0,0,0,.18)}
+.re-badge{position:absolute;top:1.2rem;left:1.2rem;background:rgba(20,20,20,.8);backdrop-filter:blur(8px);border:1px solid var(--gb);padding:.35rem .9rem;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--rose);z-index:1}
+.re-info h2{font-family:"Playfair Display",serif;font-size:clamp(1.8rem,3vw,2.8rem);font-weight:400;color:var(--cream);margin-bottom:1.2rem;line-height:1.2;opacity:0}
+.re-info p{font-size:.85rem;line-height:1.9;color:var(--warm);margin-bottom:2rem;opacity:0}
+.re-projects-list{display:flex;flex-direction:column}
+.re-proj-item{display:flex;align-items:center;gap:1rem;padding:.85rem 0;border-bottom:1px solid rgba(181,175,166,.1);opacity:0;cursor:pointer;transition:padding-left .3s}
+.re-proj-item:hover{padding-left:.4rem}
+.re-proj-item:hover .re-proj-name{color:var(--rose)}
+.re-proj-dot{width:5px;height:5px;border-radius:50%;background:var(--rose);flex-shrink:0}
+.re-proj-name{font-size:.83rem;color:var(--warm);transition:color .3s}
+.re-proj-year{font-size:.68rem;color:var(--rose);margin-left:auto}
+.re-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;opacity:0}
+.re-card{border-radius:4px;overflow:hidden;position:relative;cursor:pointer}
+.re-card-img{height:200px;position:relative;overflow:hidden}.re-card-img::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.18);pointer-events:none;z-index:1}
+.re-card-img-inner{width:100%;height:100%;background-size:cover;background-position:center;transition:transform 1.4s cubic-bezier(.4,0,.2,1);transform:scale(1.01)}
+.re-card:hover .re-card-img-inner{transform:scale(1.08)}
+.re-card-label{position:absolute;bottom:.9rem;left:.9rem;font-family:"Playfair Display",serif;font-size:.88rem;color:var(--cream);z-index:1}
+#smartcity{padding:8rem 3rem;background:linear-gradient(180deg,#141414,#0d1117,#141414)}
+.sc-inner{max-width:1400px;margin:0 auto}
+.sc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-top:3rem}
+.sc-card{border:1px solid rgba(143,163,177,.18);border-top:2px solid var(--blue);background:rgba(143,163,177,.04);backdrop-filter:blur(12px);border-radius:4px;overflow:hidden;opacity:0;transform:translateY(16px);transition:background .3s,border-top-color .3s}
+.sc-card-img{aspect-ratio:3508/1240;overflow:hidden;position:relative}.sc-card-img::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.30);pointer-events:none;z-index:1}.sc-card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease}.sc-card:hover .sc-card-img img{transform:scale(1.05)}
+.sc-card-body{padding:2.2rem;position:relative}
+.sc-card:hover{background:rgba(143,163,177,.09);border-top-color:var(--rose)}
+.sc-card-num{font-family:"Playfair Display",serif;font-size:3rem;color:rgba(143,163,177,.12);position:absolute;top:1rem;right:1.5rem;font-weight:700;line-height:1}
+.sc-card h3{font-family:"Playfair Display",serif;font-size:1.15rem;color:var(--cream);margin-bottom:.7rem}
+.sc-card p{font-size:.78rem;line-height:1.8;color:var(--warm)}
+.sc-tech-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.2rem}
+.sc-tag{padding:.25rem .7rem;border:1px solid rgba(143,163,177,.28);font-size:.62rem;letter-spacing:.1em;color:var(--blue);border-radius:2px}
+.sc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin-top:3.5rem;padding-top:2.5rem;border-top:1px solid rgba(143,163,177,.12)}
+.sc-stat{text-align:center;opacity:0}
+.sc-stat-num{font-family:"Playfair Display",serif;font-size:2.4rem;color:var(--blue);display:block}
+.sc-stat-label{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--warm);opacity:.6;margin-top:.3rem;display:block}
+#skills{padding:8rem 3rem;width:100%}
+.skills-inner{max-width:1400px;margin:0 auto}
+.skills-layout{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;margin-top:3rem}
+.skill-bar-item{margin-bottom:1.6rem;opacity:0;transform:translateX(-16px)}
+.skill-bar-header{display:flex;margin-bottom:.5rem}
+.skill-bar-name{font-size:.78rem;color:var(--cream)}
+.skill-bar-track{height:3px;background:rgba(181,175,166,.15);position:relative}
+.skill-bar-fill{height:3px;background:linear-gradient(90deg,var(--rose),var(--terra));width:0%;position:absolute;top:0;left:0}
+.skill-categories{display:flex;flex-direction:column;gap:2rem}
+.skill-cat{opacity:0;transform:translateY(16px)}
+.skill-cat-title{font-size:.62rem;letter-spacing:.4em;text-transform:uppercase;color:var(--rose);margin-bottom:.9rem;padding-bottom:.5rem;border-bottom:1px solid rgba(196,168,130,.18)}
+.skill-cat-items{display:flex;flex-wrap:wrap;gap:.5rem}
+.skill-item{padding:.3rem .8rem;border:1px solid var(--gb);font-size:.72rem;color:var(--warm);border-radius:2px;background:var(--glass);backdrop-filter:blur(8px);transition:all .3s}
+.skill-item:hover{border-color:var(--rose);color:var(--rose)}
+#pipeline{padding:8rem 3rem;background:rgba(0,0,0,.18)}
+.wf-inner{max-width:1200px;margin:0 auto}
+.wf-steps{display:grid;grid-template-columns:repeat(5,1fr);margin-top:4rem;position:relative}
+.wf-steps::before{content:"";position:absolute;top:2rem;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--rose),var(--terra),var(--sage),var(--blue),transparent)}
+.wf-step{text-align:center;padding:0 1rem;opacity:0;transform:translateY(16px)}
+.wf-icon{width:4rem;height:4rem;border:1px solid var(--gb);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.2rem;background:var(--dark);font-size:1.1rem;color:var(--rose);position:relative;z-index:1}
+.wf-step h4{font-family:"Playfair Display",serif;font-size:.88rem;color:var(--cream);margin-bottom:.4rem}
+.wf-step p{font-size:.68rem;line-height:1.7;color:var(--warm);opacity:.7}
+#contact{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:6rem 3rem;position:relative}
+.contact-eyebrow{font-size:.62rem;letter-spacing:.5em;text-transform:uppercase;color:var(--rose);margin-bottom:1.5rem;opacity:0}
+.contact-title{font-family:"Playfair Display",serif;font-style:italic;font-size:clamp(3rem,8vw,7rem);font-weight:400;color:var(--cream);line-height:1;margin-bottom:1rem;opacity:0}
+.contact-title em{color:var(--rose)}
+.contact-email{font-family:"Cormorant Garamond",serif;font-size:clamp(1rem,2vw,1.3rem);color:var(--warm);letter-spacing:.1em;margin-bottom:1.5rem;opacity:0}
+.wechat-qr{margin-bottom:2.5rem;opacity:0;display:flex;flex-direction:column;align-items:center;gap:.6rem}
+.wechat-qr img{width:100px;height:100px;object-fit:cover;border:1px solid var(--gb)}
+.wechat-qr span{font-size:.62rem;letter-spacing:.2em;color:var(--warm);opacity:.6}
+.mag-btn{position:relative;display:inline-block;padding:1rem 3rem;border:1px solid var(--rose);color:var(--rose);font-family:"Space Grotesk",sans-serif;font-size:.72rem;letter-spacing:.3em;text-transform:uppercase;text-decoration:none;background:transparent;cursor:pointer;overflow:hidden;opacity:0}
+.mag-btn::before{content:"";position:absolute;inset:0;background:var(--rose);transform:scaleX(0);transform-origin:left;transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.mag-btn:hover::before{transform:scaleX(1)}
+.mag-btn span{position:relative;z-index:1;transition:color .4s}
+.mag-btn:hover span{color:var(--dark)}
+.contact-footer{position:absolute;bottom:2rem;font-size:.62rem;letter-spacing:.2em;color:var(--warm);opacity:.35}
+#proj-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;opacity:0}
+#proj-overlay.active{display:flex}
+#proj-overlay-inner{background:rgba(20,20,20,.97);width:860px;height:600px;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0}
+.overlay-header{display:flex;justify-content:space-between;align-items:center;padding:1.2rem 2rem;border-bottom:1px solid var(--gb);background:rgba(20,20,20,.95);z-index:1}
+.overlay-title{font-family:"Playfair Display",serif;font-size:1.6rem;color:var(--cream)}
+.overlay-close{background:none;border:1px solid var(--gb);color:var(--rose);width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.overlay-close:hover{background:var(--rose);color:var(--dark);border-color:var(--rose)}
+.overlay-body{padding:0;flex:1;overflow:hidden}
+.overlay-video{margin:0;position:relative;width:100%;height:100%;overflow:hidden}
+.overlay-video iframe{position:absolute;top:0;left:0;width:100%;height:110.6%;border:none}
+.overlay-video-placeholder{height:70px;border:1px dashed var(--gb);border-radius:4px;display:flex;align-items:center;justify-content:center;color:var(--warm);font-size:.75rem;letter-spacing:.2em;opacity:.45}
+.overlay-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.overlay-gallery img{width:100%;height:220px;object-fit:cover;border-radius:4px;border:1px solid var(--gb)}
+@media(max-width:900px){#about{padding:5rem 1.5rem}.projects-grid{grid-template-columns:1fr 1fr}.re-featured{grid-template-columns:1fr}.sc-grid{grid-template-columns:1fr}.sc-stats{grid-template-columns:repeat(2,1fr)}.skills-layout{grid-template-columns:1fr}.wf-steps{grid-template-columns:1fr;gap:2rem}.wf-steps::before{display:none}nav{padding:1.2rem 1.5rem}.nav-links{display:none}}
+@media(max-width:600px){.projects-grid{grid-template-columns:1fr}.re-grid{grid-template-columns:1fr}}
+</style></head><body>
+<div id="loader"><div id="loader-title">作品集</div><div id="loader-num">000</div><div id="loader-bar-wrap"><div id="loader-bar"></div></div></div>
+<div id="cursor-ring"></div><div id="cursor-dot"></div><div id="grain"></div><canvas id="bg-canvas"></canvas>
+<nav><a class="nav-logo" href="#hero">黄海超 &mdash; HUANG HAICHAO</a><ul class="nav-links"><li><a href="#about">关于/About</a></li><li><a href="#projects">作品/Works</a></li><li><a href="#realestate">地产/Real Estate</a></li><li><a href="#smartcity">其他作品/Others</a></li><li><a href="#skills">技能/Skills</a></li><li><a href="#contact">联系/Contact</a></li></ul></nav>
+<section id="hero">
+  <div class="hero-slides">
+    <div class="hero-slide active" style="background-image:url('Asset/1_高福里.webp')"></div>
+    <div class="hero-slide" data-bg="Asset/2_上海华润外滩瑞府.webp"></div>
+    <div class="hero-slide" data-bg="Asset/3_南京瑞玺.webp"></div>
+    <div class="hero-slide" data-bg="Asset/4_天津建投奥体誉院.webp"></div>
+    <div class="hero-slide" data-bg="Asset/5_杭州滨江天澜传序.webp"></div>
+  </div>
+  <div class="hero-eyebrow">Unreal Engine Artist &middot; Technical Artist</div>
+  <div class="hero-name">作品集</div>
+  <div class="hero-portfolio">Portfolio</div>
+  <div class="hero-sub">Crafting Digital Worlds with Precision &amp; Vision</div>
+  <div class="scroll-indicator">
+    <span>Scroll</span><div class="scroll-line"></div>
+    <div class="hero-dots">
+      <div class="hero-dot active" onclick="goSlide(0)"></div>
+      <div class="hero-dot" onclick="goSlide(1)"></div>
+      <div class="hero-dot" onclick="goSlide(2)"></div>
+      <div class="hero-dot" onclick="goSlide(3)"></div>
+      <div class="hero-dot" onclick="goSlide(4)"></div>
+    </div>
+  </div>
+</section>
+<section id="about">
+<div class="about-inner">
+<div class="about-left">
+  <div class="section-label">About</div>
+  <h2 class="about-title">艺术家 &amp;<br><em>技术师</em></h2>
+  <p class="about-text">多元化UE5艺术家，专注于建筑可视化、智慧城市仿真与实时交互体验。融合艺术视觉与技术执行，将创意转化为精准的数字现实。</p>
+  <p class="about-text">从写实房地产渲染到复杂CIM系统，每个项目都以电影化感性与工程精度共同推进。</p>
+  <div class="profile-card">
+    <img class="profile-photo" src="Asset/0_证件照.webp" alt="黄海超" loading="lazy">
+    <div class="profile-info">
+      <div class="info-row"><span class="info-label">姓名</span><span class="info-val">黄海超</span></div>
+      <div class="info-row"><span class="info-label">出生</span><span class="info-val">2001.01.17</span></div>
+      <div class="info-row"><span class="info-label">所在地</span><span class="info-val">中国</span></div>
+      <div class="info-row"><span class="info-label">邮箱</span><span class="info-val">787564399@qq.com</span></div>
+      <div class="info-row"><span class="info-label">电话</span><span class="info-val">+86 17357426434</span></div>
+    </div>
+  </div>
+</div>
+<div class="about-right">
+  <div class="skills-title">Core Skills</div>
+  <div class="skills-grid">
+    <span class="skill-tag">UE5</span><span class="skill-tag">HLSL</span><span class="skill-tag">Shader</span><span class="skill-tag">Ray Marching</span><span class="skill-tag">VEX</span><span class="skill-tag">Houdini</span><span class="skill-tag">PCG</span><span class="skill-tag">Blueprint</span><span class="skill-tag">C++</span><span class="skill-tag">3ds Max</span><span class="skill-tag">Blender</span><span class="skill-tag">Substance Designer</span><span class="skill-tag">Substance Painter</span><span class="skill-tag">Photogrammetry</span>
+  </div>
+  <div class="skills-title">Experience Timeline</div>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-date">2024.09–2026.01</div><div class="tl-content"><div class="tl-header"><img class="tl-logo" src="Asset/0_景尚众合logo.webp" alt="" loading="lazy"><h4>景尚众合 · UE CIM / 地产可视化</h4></div><p>建筑可视化、房地产渲染、电影化漫游</p></div></div>
+    <div class="tl-item"><div class="tl-date">2023.12–2024.05</div><div class="tl-content"><div class="tl-header"><img class="tl-logo" src="Asset/0_均联智行logo.webp" alt="" loading="lazy"><h4>均联智行 · UE HMI / 智能座舱</h4></div><p>人机界面设计、车载HMI、交互仪表盘系统</p></div></div>
+    <div class="tl-item"><div class="tl-date">2023.09–2023.12</div><div class="tl-content"><div class="tl-header"><img class="tl-logo" src="Asset/0_浙峰云智logo.webp" alt="" loading="lazy"><h4>浙峰云智 · UE CIM / 智慧城市</h4></div><p>城市信息模型、数字孪生平台、大规模城市仿真</p></div></div>
+  </div>
+</div>
+</section>
+<section id="projects">
+  <div class="projects-inner">
+    <div class="section-header">
+      <span class="section-label">精选作品</span>
+      <h2>Selected Works</h2>
+      <span class="en-sub">虚幻引擎 · 建筑可视化 · 技术美术</span>
+    </div>
+    <div class="projects-grid">
+      <div class="project-card" data-tilt onclick="openProject('gaofuli')" style="cursor:pointer">
+        <div class="card-img"><img src="Asset/1_高福里.webp" alt="上海华润高福里" loading="lazy"></div>
+        <div class="card-body"><p class="card-cat">地产可视化 · Real Estate</p><h3 class="card-title">上海华润高福里<br><span style="font-size:.75rem;font-family:'Space Grotesk',sans-serif;font-weight:300">Shanghai CRC Gaofuli</span></h3><p class="card-sub">高端住宅可视化 · Cinematic lighting &amp; material precision</p></div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="project-card" data-tilt onclick="openProject('waitan')" style="cursor:pointer">
+        <div class="card-img"><img src="Asset/2_上海华润外滩瑞府.webp" alt="上海华润外滩瑞府" loading="lazy"></div>
+        <div class="card-body"><p class="card-cat">地产可视化 · Real Estate</p><h3 class="card-title">上海华润外滩瑞府<br><span style="font-size:.75rem;font-family:'Space Grotesk',sans-serif;font-weight:300">Shanghai CRC Bund Mansion</span></h3><p class="card-sub">外滩豪宅渲染 · Luxury waterfront atmospheric rendering</p></div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="project-card" data-tilt onclick="openProject('ruixi')" style="cursor:pointer">
+        <div class="card-img"><img src="Asset/3_南京瑞玺.webp" alt="南京华润瑞玺" loading="lazy"></div>
+        <div class="card-body"><p class="card-cat">地产可视化 · Real Estate</p><h3 class="card-title">南京华润瑞玺<br><span style="font-size:.75rem;font-family:'Space Grotesk',sans-serif;font-weight:300">Nanjing CR Ruixi</span></h3><p class="card-sub">UE5 Lumen全局光照 · Real-time rendering</p></div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="project-card" data-tilt onclick="openProject('tianjin')" style="cursor:pointer">
+        <div class="card-img"><img src="Asset/4_天津建投奥体誉院.webp" alt="天津建投奥体誉院" loading="lazy"></div>
+        <div class="card-body"><p class="card-cat">地产可视化 · Real Estate</p><h3 class="card-title">天津建投奥体誉院<br><span style="font-size:.75rem;font-family:'Space Grotesk',sans-serif;font-weight:300">Tianjin Olympic Village</span></h3><p class="card-sub">大型住宅综合体 · Large-scale residential complex</p></div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="project-card" data-tilt onclick="openProject('hangzhou')" style="cursor:pointer">
+        <div class="card-img"><img src="Asset/5_杭州滨江天澜传序.webp" alt="杭州滨江天澜传序" loading="lazy"></div>
+        <div class="card-body"><p class="card-cat">地产可视化 · Real Estate</p><h3 class="card-title">杭州滨江天澜传序<br><span style="font-size:.75rem;font-family:'Space Grotesk',sans-serif;font-weight:300">Hangzhou Tianlan</span></h3><p class="card-sub">景观可视化 · Landscape visualization</p></div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="project-card" data-tilt onclick="openProject('houdini')" style="cursor:pointer">
+        <div class="card-img"><img src="Asset/13_湖边小屋-houdini-vfx+PCG.webp" alt="湖边小屋 Houdini VFX+PCG" loading="lazy"></div>
+        <div class="card-body"><p class="card-cat">特效 · VFX &amp; Procedural</p><h3 class="card-title">Houdini VFX + PCG<br><span style="font-size:.75rem;font-family:'Space Grotesk',sans-serif;font-weight:300">程序化生成 · Procedural Effects</span></h3><p class="card-sub">程序化内容生成与特效管线 · Simulation pipeline</p></div>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="realestate"><div class="re-inner">
+<div class="section-header"><span class="section-label">其他地产项目</span><h2>Real Estate Projects</h2></div>
+<div class="re-featured">
+<div class="re-img-wrap">
+<div class="re-grid-left">
+<div class="re-card" onclick="openProject('guangzhou')"><div class="re-card-img"><div class="re-card-img-inner" style="background-image:url('Asset/07_广州招商林屿境.webp')"></div><div class="re-card-label">广州招商林屿境</div></div></div>
+<div class="re-card" onclick="openProject('hefei')"><div class="re-card-img"><div class="re-card-img-inner" style="background-image:url('Asset/08_合肥伟星T10.webp')"></div><div class="re-card-label">合肥伟星T10</div></div></div>
+<div class="re-card" onclick="openProject('dalian')"><div class="re-card-img"><div class="re-card-img-inner" style="background-image:url('Asset/09_大连华润澐璟.webp')"></div><div class="re-card-label">大连华润澐璟</div></div></div>
+<div class="re-card" onclick="openProject('beijing')"><div class="re-card-img"><div class="re-card-img-inner" style="background-image:url('Asset/10_北京金隅西颂.webp')"></div><div class="re-card-label">北京金隅西颂</div></div></div>
+<div class="re-card" onclick="openProject('hangzhou2')"><div class="re-card-img"><div class="re-card-img-inner" style="background-image:url('Asset/11_杭州翠隐江粼.webp')"></div><div class="re-card-label">杭州翠隐江粼</div></div></div>
+<div class="re-card" onclick="openProject('nanjing2')"><div class="re-card-img"><div class="re-card-img-inner" style="background-image:url('Asset/12_南京绿城云庐.webp')"></div><div class="re-card-label">南京绿城云庐</div></div></div>
+</div>
+</div>
+<div class="re-info">
+<div class="section-label" style="opacity:1">作品精选 · Portfolio Highlights</div>
+<h2 style="font-size:clamp(1.2rem,2.5vw,2rem)">交互式建筑体验 · Interactive Architectural Experiences</h2>
+<p>通过虚幻引擎5的Lumen与Nanite技术，呈现照片级地产可视化。每个项目融合建筑精度与电影叙事。</p>
+<div class="re-projects-list">
+<div class="re-proj-item" onclick="openProject('guangzhou')"><div class="re-proj-dot"></div><span class="re-proj-name">广州招商林屿境</span><span class="re-proj-year">2025</span></div>
+<div class="re-proj-item" onclick="openProject('hefei')"><div class="re-proj-dot"></div><span class="re-proj-name">合肥伟星T10</span><span class="re-proj-year">2025</span></div>
+<div class="re-proj-item" onclick="openProject('dalian')"><div class="re-proj-dot"></div><span class="re-proj-name">大连华润澐璟</span><span class="re-proj-year">2025</span></div>
+<div class="re-proj-item" onclick="openProject('beijing')"><div class="re-proj-dot"></div><span class="re-proj-name">北京金隅西颂</span><span class="re-proj-year">2025</span></div>
+<div class="re-proj-item" onclick="openProject('hangzhou2')"><div class="re-proj-dot"></div><span class="re-proj-name">杭州翠隐江粼</span><span class="re-proj-year">2025</span></div>
+<div class="re-proj-item" onclick="openProject('nanjing2')"><div class="re-proj-dot"></div><span class="re-proj-name">南京绿城云庐</span><span class="re-proj-year">2025</span></div>
+</div></div></div>
+</div></section>
+<section id="smartcity"><div class="sc-inner">
+<div class="section-header"><span class="section-label">其他作品</span><h2>Other Works</h2></div>
+<div class="sc-grid">
+<div class="sc-card"><div class="sc-card-img"><img src="Asset/kkk_blender建模渲染.webp" alt="Blender 建模渲染" loading="lazy"></div><div class="sc-card-body"><div class="sc-card-num">01</div><h3>Blender 建模渲染</h3><p>覆盖从建模到渲染的完整创作流程，兼顾商业项目与艺术表达。</p><div class="sc-tech-tags"><span class="sc-tag">商业IP</span><span class="sc-tag">几何节点</span><span class="sc-tag">Eevee</span><span class="sc-tag">PBR全流程</span></div></div></div>
+<div class="sc-card"><div class="sc-card-img"><img src="Asset/kkk_智能座舱.webp" alt="HMI 智能座舱可视化" loading="lazy"></div><div class="sc-card-body"><div class="sc-card-num">02</div><h3>HMI 智能座舱可视化</h3><p>面向汽车智能座舱的HMI界面设计与可视化，融合交互逻辑与视觉表达。</p><div class="sc-tech-tags"><span class="sc-tag">HMI</span><span class="sc-tag">UI/UX</span><span class="sc-tag">座舱设计</span><span class="sc-tag">交互可视化</span></div></div></div>
+<div class="sc-card"><div class="sc-card-img"><img src="Asset/kkk_倾斜摄影.webp" alt="倾斜摄影" loading="lazy"></div><div class="sc-card-body"><div class="sc-card-num">03</div><h3>倾斜摄影</h3><p>航拍倾斜摄影数据处理与集成，将真实场景转化为高精度三维模型资产。</p><div class="sc-tech-tags"><span class="sc-tag">Photogrammetry</span><span class="sc-tag">Nanite</span><span class="sc-tag">实景建模</span><span class="sc-tag">Pipeline</span></div></div></div>
+<div class="sc-card"><div class="sc-card-img"><img src="Asset/kkk_建筑设计.webp" alt="建筑设计与渲染" loading="lazy"></div><div class="sc-card-body"><div class="sc-card-num">04</div><h3>建筑设计与渲染</h3><p>从方案设计到效果图输出的完整建筑可视化流程，兼顾精度与美学表达。</p><div class="sc-tech-tags"><span class="sc-tag">建筑设计</span><span class="sc-tag">效果图</span><span class="sc-tag">材质渲染</span><span class="sc-tag">空间表达</span></div></div></div>
+</div>
+<div class="sc-stats">
+<div class="sc-stat"><span class="sc-stat-num">3+</span><span class="sc-stat-label">年经验 · Years</span></div>
+<div class="sc-stat"><span class="sc-stat-num">10+</span><span class="sc-stat-label">重点项目 · Projects</span></div>
+<div class="sc-stat"><span class="sc-stat-num">10+</span><span class="sc-stat-label">覆盖城市 · Cities</span></div>
+<div class="sc-stat"><span class="sc-stat-num">10+</span><span class="sc-stat-label">掌握工具 · Tools</span></div>
+</div></div></section>
+<section id="skills"><div class="skills-inner"><div class="section-header"><div class="section-label">专业能力 · Expertise</div><h2>技术技能 · Technical Skills</h2></div>
+<div class="skills-layout">
+<div class="skill-bars">
+<div class="skill-bar-item"><div class="skill-bar-header"><span class="skill-bar-name">Unreal Engine 5</span></div><div class="skill-bar-track"><div class="skill-bar-fill" data-width="95"></div></div></div>
+<div class="skill-bar-item"><div class="skill-bar-header"><span class="skill-bar-name">3ds Max</span></div><div class="skill-bar-track"><div class="skill-bar-fill" data-width="88"></div></div></div>
+<div class="skill-bar-item"><div class="skill-bar-header"><span class="skill-bar-name">Houdini + PCG</span></div><div class="skill-bar-track"><div class="skill-bar-fill" data-width="82"></div></div></div>
+<div class="skill-bar-item"><div class="skill-bar-header"><span class="skill-bar-name">Blender</span></div><div class="skill-bar-track"><div class="skill-bar-fill" data-width="85"></div></div></div>
+<div class="skill-bar-item"><div class="skill-bar-header"><span class="skill-bar-name">Blueprint / C++</span></div><div class="skill-bar-track"><div class="skill-bar-fill" data-width="80"></div></div></div>
+<div class="skill-bar-item"><div class="skill-bar-header"><span class="skill-bar-name">Substance Suite</span></div><div class="skill-bar-track"><div class="skill-bar-fill" data-width="87"></div></div></div>
+<div class="skill-bar-item"><div class="skill-bar-header"><span class="skill-bar-name">Photogrammetry</span></div><div class="skill-bar-track"><div class="skill-bar-fill" data-width="78"></div></div></div>
+</div>
+<div class="skill-categories">
+<div class="skill-cat"><div class="skill-cat-title">实时引擎 · Real-Time Engines</div><div class="skill-cat-items"><span class="skill-item">UE5 Lumen</span><span class="skill-item">Nanite</span><span class="skill-item">Blueprint</span><span class="skill-item">C++</span><span class="skill-item">PCG</span><span class="skill-item">HLSL</span><span class="skill-item">Shader Graph</span></div></div>
+<div class="skill-cat"><div class="skill-cat-title">技术美术 · Technical Art</div><div class="skill-cat-items"><span class="skill-item">HLSL</span><span class="skill-item">Ray Marching</span><span class="skill-item">SDF</span><span class="skill-item">Procedural Shader</span><span class="skill-item">VFX Graph</span><span class="skill-item">Niagara</span></div></div>
+<div class="skill-cat"><div class="skill-cat-title">三维与特效 · 3D &amp; VFX</div><div class="skill-cat-items"><span class="skill-item">Houdini</span><span class="skill-item">VEX</span><span class="skill-item">3ds Max</span><span class="skill-item">Blender</span><span class="skill-item">Rhino</span></div></div>
+<div class="skill-cat"><div class="skill-cat-title">贴图与材质 · Texturing &amp; Materials</div><div class="skill-cat-items"><span class="skill-item">Substance Painter</span><span class="skill-item">Substance Designer</span><span class="skill-item">Photoshop</span><span class="skill-item">Photogrammetry</span></div></div></div></div></section>
+<section id="pipeline"><div class="wf-inner">
+<div class="section-header"><div class="section-label">工作流程 · Pipeline</div><h2>流程与工作方式 · Process &amp; Workflow</h2></div>
+<div class="wf-steps">
+<div class="wf-step"><div class="wf-icon">⧆</div><h4>概念 · Concept</h4><p>需求分析、参考收集、情绪板制作</p></div>
+<div class="wf-step"><div class="wf-icon">◈</div><h4>建模 · Modeling</h4><p>3ds Max / Blender / Rhino 几何体，LOD规划</p></div>
+<div class="wf-step"><div class="wf-icon">◉</div><h4>贴图 · Texturing</h4><p>Substance Painter / Designer，PBR材质制作</p></div>
+<div class="wf-step"><div class="wf-icon">◎</div><h4>UE5集成 · Assembly</h4><p>Lumen灯光、Nanite、Blueprint逻辑、PCG系统</p></div>
+<div class="wf-step"><div class="wf-icon">◆</div><h4>交付 · Delivery</h4><p>实时渲染、视频输出、交互演示</p></div>
+</div></div></section>
+<section id="contact">
+<div class="contact-eyebrow">联系我 · Get In Touch</div>
+<div class="contact-title">Let's<br><em>Create</em></div>
+<div class="contact-email">787564399@qq.com</div>
+<div class="wechat-qr"><img src="Asset/0_微信二维码.webp" alt="WeChat QR" loading="lazy"><span>微信 · WeChat</span></div>
+<a href="mailto:787564399@qq.com" class="mag-btn"><span>发送消息 · Send Message</span></a>
+<div class="contact-footer">&copy; 2024 HHC &middot; 虚幻引擎艺术家 · Unreal Engine Artist</div>
+</section>
+<div id="proj-overlay">
+<div id="proj-overlay-inner">
+<div class="overlay-header"><div class="overlay-title" id="overlay-title"></div><button class="overlay-close" onclick="closeProject()">&#x2715;</button></div>
+<div class="overlay-body"><div class="overlay-video" id="overlay-video"></div><div class="overlay-gallery" id="overlay-gallery"></div></div>
+</div>
+</div>
+<script>
+var PROJECTS={
+  gaofuli:{title:'上海华润高福里',videoUrl:'https://www.acfun.cn/player/ac48292712',images:['2_上海华润高福里1.png','2_上海华润高福里2.png','2_上海华润高福里13.png']},
+  waitan:{title:'上海华润外滩瑞府',videoUrl:'https://www.acfun.cn/player/ac48293639',images:['3_上海华润外滩瑞府1.png','3_上海华润外滩瑞府2.png','3_上海华润外滩瑞府3.png']},
+  ruixi:{title:'南京华润瑞玺',videoUrl:'https://www.acfun.cn/player/ac48293945',images:['4_南京华润瑞玺.png','4_南京华润瑞玺1.png','4_南京华润瑞玺2.png','4_南京华润瑞玺5.png']},
+  tianjin:{title:'天津建投奥体誉院',videoUrl:'https://www.acfun.cn/player/ac48293948',images:['5_天津建投奥体誉院.png','5_天津建投奥体誉院1.jpg','5_天津建投奥体誉院2.png']},
+  hangzhou:{title:'杭州滨江天澜传序',videoUrl:'https://www.acfun.cn/player/ac48293950',images:['6_杭州滨江天澜传序.png','6_杭州滨江天澜传序1.png','6_杭州滨江天澜传序2.png']},
+  houdini:{title:'Houdini VFX + PCG',videoUrl:'https://www.acfun.cn/player/ac48299317',images:['13_湖边小屋-houdini-vfx+PCG.webp']},
+  guangzhou:{title:'广州招商林屿境',videoUrl:'https://www.acfun.cn/player/ac48293968',images:['07_广州招商林屿境.png']},
+  hefei:{title:'合肥伟星T10',videoUrl:'https://www.acfun.cn/player/ac48294282',images:['08_合肥伟星T10.png']},
+  dalian:{title:'大连华润澐璟',videoUrl:'https://www.acfun.cn/player/ac48294745',images:['09_大连华润澐璟.png']},
+  beijing:{title:'北京金隅西颂',videoUrl:'https://www.acfun.cn/player/ac48294759',images:['10_北京金隅西颂.png']},
+  hangzhou2:{title:'杭州翠隐江粼',videoUrl:'https://www.acfun.cn/player/ac48294769',images:['11_杭州翠隐江粼.jpg']},
+  nanjing2:{title:'南京绿城云庐',videoUrl:'https://www.acfun.cn/player/ac48294747',images:['12_南京绿城云庐.png']}
+};
+var IMG_BASE='Asset/';
+function openProject(id){
+  var proj=PROJECTS[id];if(!proj)return;
+  document.getElementById('overlay-title').textContent=proj.title;
+  var vEl=document.getElementById('overlay-video');
+  vEl.innerHTML=proj.videoUrl?'<iframe src="'+proj.videoUrl+'" allowfullscreen></iframe>':'<div class="overlay-video-placeholder">视频链接待添加</div>';
+  var gEl=document.getElementById('overlay-gallery');
+  gEl.innerHTML='';
+  var ov=document.getElementById('proj-overlay');
+  ov.classList.add('active');
+  gsap.fromTo(ov,{opacity:0},{opacity:1,duration:.35,ease:'power2.out'});
+  document.body.style.overflow='hidden';
+}
+function closeProject(){
+  var ov=document.getElementById('proj-overlay');
+  gsap.to(ov,{opacity:0,duration:.25,ease:'power2.in',onComplete:function(){ov.classList.remove('active');document.body.style.overflow='';}});
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeProject();});
+// LOADER
+(function(){
+  var bar=document.getElementById("loader-bar");
+  var num=document.getElementById("loader-num");
+  var pct=0;
+  var iv=setInterval(function(){
+    pct+=Math.random()*4+1;
+    if(pct>=100){pct=100;clearInterval(iv);done();}
+    bar.style.width=pct+"%";
+    num.textContent=String(Math.floor(pct)).padStart(3,"0");
+  },30);
+  function done(){
+    gsap.to("#loader",{opacity:0,duration:.8,delay:.3,onComplete:function(){
+      document.getElementById("loader").style.display="none";
+      heroIn();
+    }});
+  }
+})();
+// HERO SLIDESHOW
+var slideIdx=0;
+var slides=document.querySelectorAll(".hero-slide");
+var dots=document.querySelectorAll(".hero-dot");
+function goSlide(n){
+  slides[slideIdx].classList.remove("active");
+  dots[slideIdx].classList.remove("active");
+  slideIdx=n;
+  var s=slides[slideIdx];
+  if(s.dataset.bg){s.style.backgroundImage="url('"+s.dataset.bg+"')";delete s.dataset.bg;}
+  s.classList.add("active");
+  dots[slideIdx].classList.add("active");
+}
+setInterval(function(){goSlide((slideIdx+1)%slides.length);},5000);
+// CURSOR
+var ring=document.getElementById("cursor-ring");
+var dot=document.getElementById("cursor-dot");
+var mx=0,my=0,cx=0,cy=0;
+document.addEventListener("mousemove",function(e){mx=e.clientX;my=e.clientY;});
+(function tick(){cx+=(mx-cx)*.12;cy+=(my-cy)*.12;ring.style.left=cx+"px";ring.style.top=cy+"px";dot.style.left=mx+"px";dot.style.top=my+"px";requestAnimationFrame(tick);})();
+document.querySelectorAll("a,button,.project-card,.mag-btn,.skill-tag,.nav-links a,.re-proj-item,.re-card").forEach(function(el){
+  el.addEventListener("mouseenter",function(){document.body.classList.add("cur-hover");});
+  el.addEventListener("mouseleave",function(){document.body.classList.remove("cur-hover");});
+});
+// THREE.JS PARTICLES
+(function(){
+  var c=document.getElementById("bg-canvas");
+  var r=new THREE.WebGLRenderer({canvas:c,alpha:true});
+  r.setPixelRatio(Math.min(devicePixelRatio,2));
+  r.setSize(innerWidth,innerHeight);
+  var scene=new THREE.Scene();
+  var cam=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,100);
+  cam.position.z=30;
+  var N=800,geo=new THREE.BufferGeometry();
+  var pos=new Float32Array(N*3),vel=new Float32Array(N*3);
+  for(var i=0;i<N;i++){pos[i*3]=(Math.random()-.5)*80;pos[i*3+1]=(Math.random()-.5)*60;pos[i*3+2]=(Math.random()-.5)*40;vel[i*3]=(Math.random()-.5)*.008;vel[i*3+1]=(Math.random()-.5)*.006;}
+  geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
+  var mat=new THREE.PointsMaterial({color:0xC4A882,size:.12,transparent:true,opacity:.45});
+  var pts=new THREE.Points(geo,mat);
+  scene.add(pts);
+  window.addEventListener("resize",function(){cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+  (function anim(){requestAnimationFrame(anim);var pa=geo.attributes.position.array;for(var i=0;i<N;i++){pa[i*3]+=vel[i*3];pa[i*3+1]+=vel[i*3+1];if(pa[i*3]>40||pa[i*3]<-40)vel[i*3]*=-1;if(pa[i*3+1]>30||pa[i*3+1]<-30)vel[i*3+1]*=-1;}geo.attributes.position.needsUpdate=true;pts.rotation.y+=.0003;r.render(scene,cam);})();
+})();
+// GSAP
+gsap.registerPlugin(ScrollTrigger,ScrollToPlugin);
+function heroIn(){
+  gsap.timeline()
+    .to(".hero-eyebrow",{opacity:1,y:0,duration:.9,ease:"power3.out"})
+    .to(".hero-name",{opacity:1,y:0,duration:1.1,ease:"power3.out"},".2")
+    .to(".hero-portfolio",{opacity:1,duration:.8,ease:"power3.out"},".5")
+    .to(".hero-identity",{opacity:1,duration:.7,ease:"power3.out"},".7")
+    .to(".hero-sub",{opacity:1,duration:.7,ease:"power3.out"},".9")
+    .to(".scroll-indicator",{opacity:1,duration:.8},"1.1");
+}
+gsap.utils.toArray(".about-left > *, .about-right > *").forEach(function(el,i){ScrollTrigger.create({trigger:el,start:"top 85%",onEnter:function(){gsap.to(el,{opacity:1,y:0,duration:.8,delay:i*.08,ease:"power3.out"});}});});
+gsap.to(".profile-card",{scrollTrigger:{trigger:".profile-card",start:"top 85%"},opacity:1,duration:.8,ease:"power3.out"});
+gsap.to(".logo-row",{scrollTrigger:{trigger:".logo-row",start:"top 85%"},opacity:1,duration:.8,ease:"power3.out"});
+gsap.to(".skill-tag",{scrollTrigger:{trigger:".skills-grid",start:"top 80%"},opacity:1,y:0,stagger:.06,duration:.5,ease:"power2.out"});
+gsap.to(".tl-item",{scrollTrigger:{trigger:".timeline",start:"top 80%"},opacity:1,x:0,stagger:.15,duration:.7,ease:"power3.out"});
+gsap.utils.toArray(".section-header h2").forEach(function(el){gsap.to(el,{scrollTrigger:{trigger:el,start:"top 85%"},opacity:1,y:0,duration:.8,ease:"power3.out"},);});
+gsap.to(".project-card",{scrollTrigger:{trigger:".projects-grid",start:"top 80%"},opacity:1,y:0,stagger:.1,duration:.8,ease:"power3.out"});
+gsap.to(".re-img-wrap",{scrollTrigger:{trigger:".re-featured",start:"top 80%"},opacity:1,duration:.9,ease:"power3.out"});
+gsap.to(".re-info h2",{scrollTrigger:{trigger:".re-info",start:"top 80%"},opacity:1,duration:.8,ease:"power3.out"});
+gsap.to(".re-info p",{scrollTrigger:{trigger:".re-info",start:"top 80%"},opacity:1,duration:.8,delay:.2,ease:"power3.out"});
+gsap.to(".re-proj-item",{scrollTrigger:{trigger:".re-projects-list",start:"top 80%"},opacity:1,stagger:.1,duration:.6,ease:"power3.out"});
+gsap.to(".re-grid",{scrollTrigger:{trigger:".re-grid",start:"top 85%"},opacity:1,duration:.8,ease:"power3.out"});
+gsap.to(".sc-card",{scrollTrigger:{trigger:".sc-grid",start:"top 80%"},opacity:1,y:0,stagger:.12,duration:.7,ease:"power3.out"});
+gsap.to(".sc-stat",{scrollTrigger:{trigger:".sc-stats",start:"top 85%"},opacity:1,stagger:.1,duration:.7,ease:"power3.out"});
+document.querySelectorAll(".skill-bar-item").forEach(function(item,i){
+  gsap.to(item,{scrollTrigger:{trigger:"#skills",start:"top 75%"},opacity:1,x:0,delay:i*.1,duration:.6,ease:"power3.out"});
+  var fill=item.querySelector(".skill-bar-fill");
+  gsap.to(fill,{scrollTrigger:{trigger:"#skills",start:"top 75%"},width:fill.dataset.width+"%",delay:i*.1+.3,duration:1.2,ease:"power3.out"});
+});
+gsap.to(".skill-cat",{scrollTrigger:{trigger:".skill-categories",start:"top 80%"},opacity:1,y:0,stagger:.12,duration:.7,ease:"power3.out"});
+gsap.to(".wf-step",{scrollTrigger:{trigger:".wf-steps",start:"top 80%"},opacity:1,y:0,stagger:.15,duration:.7,ease:"power3.out"});
+gsap.timeline({scrollTrigger:{trigger:"#contact",start:"top 70%"}})
+  .to(".contact-eyebrow",{opacity:1,duration:.7})
+  .to(".contact-title",{opacity:1,duration:.9,ease:"power3.out"},".2")
+  .to(".contact-email",{opacity:1,duration:.7},".5")
+  .to(".wechat-qr",{opacity:1,duration:.7},".65")
+  .to(".mag-btn",{opacity:1,duration:.7},".8");
+document.querySelectorAll("[data-tilt]").forEach(function(card){
+  card.addEventListener("mousemove",function(e){
+    var r=card.getBoundingClientRect();
+    var x=(e.clientX-r.left)/r.width-.5;
+    var y=(e.clientY-r.top)/r.height-.5;
+    gsap.to(card,{rotateY:x*18,rotateX:-y*18,scale:1.03,duration:.4,ease:"power2.out",transformPerspective:800});
+  });
+  card.addEventListener("mouseleave",function(){
+    gsap.to(card,{rotateY:0,rotateX:0,scale:1,duration:.6,ease:"elastic.out(1,.7)"});
+  });
+});
+document.querySelectorAll(".mag-btn").forEach(function(btn){
+  btn.addEventListener("mousemove",function(e){
+    var r=btn.getBoundingClientRect();
+    var x=(e.clientX-r.left-r.width/2)*.35;
+    var y=(e.clientY-r.top-r.height/2)*.35;
+    gsap.to(btn,{x:x,y:y,duration:.4,ease:"power2.out"});
+  });
+  btn.addEventListener("mouseleave",function(){
+    gsap.to(btn,{x:0,y:0,duration:.7,ease:"elastic.out(1,.5)"});
+  });
+});
+document.querySelectorAll('a[href^="#"]').forEach(function(link){
+  link.addEventListener("click",function(e){
+    e.preventDefault();
+    gsap.to(window,{scrollTo:link.getAttribute("href"),duration:1.2,ease:"power3.inOut"});
+  });
+});
+gsap.utils.toArray(".re-img,.re-card-img").forEach(function(el){
+  gsap.to(el,{yPercent:-12,ease:"none",scrollTrigger:{trigger:el,start:"top bottom",end:"bottom top",scrub:true}});
+});
+var lastY=0;
+ScrollTrigger.create({onUpdate:function(self){
+  var y=window.scrollY;
+  if(y>100){gsap.to("nav",{y:y>lastY?-80:0,duration:.4,ease:"power2.out"});}
+  lastY=y;
+}});
+</script></body></html>
